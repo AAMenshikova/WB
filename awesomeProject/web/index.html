@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="ru">
+<head>
+    <meta charset="utf-8">
+    <title>Orders</title>
+</head>
+<body>
+<h2>Создать заказ (POST /order)</h2>
+<p>Вставьте JSON заказа и нажмите «Создать».</p>
+<textarea id="json" rows="16" cols="80"></textarea><br>
+<button id="createBtn">Создать</button>
+<div id="createStatus"></div>
+
+<hr>
+
+<h2>Получить заказ (GET /order/{order_uid})</h2>
+<input id="orderId" placeholder="order_uid" size="50">
+<button id="getBtn">Получить</button>
+<div id="getStatus"></div>
+<pre id="out"></pre>
+
+<script>
+    const $ = sel => document.querySelector(sel);
+
+    $('#json').value = JSON.stringify({
+        "order_uid": "b563feb7b2b84b6test",
+        "track_number": "WBILMTESTTRACK",
+        "entry": "WBIL",
+        "delivery": {
+            "name": "Test Testov",
+            "phone": "+9720000000",
+            "zip": "2639809",
+            "city": "Kiryat Mozkin",
+            "address": "Ploshad Mira 15",
+            "region": "Kraiot",
+            "email": "test@gmail.com"
+        },
+        "payment": {
+            "transaction": "b563feb7b2b84b6test",
+            "request_id": "",
+            "currency": "USD",
+            "provider": "wbpay",
+            "amount": 1817,
+            "payment_dt": 1637907727,
+            "bank": "alpha",
+            "delivery_cost": 1500,
+            "goods_total": 317,
+            "custom_fee": 0
+        },
+        "items": [
+            {
+                "chrt_id": 9934930,
+                "track_number": "WBILMTESTTRACK",
+                "price": 453,
+                "rid": "ab4219087a764ae0btest",
+                "name": "Mascaras",
+                "sale": 30,
+                "size": "0",
+                "total_price": 317,
+                "nm_id": 2389212,
+                "brand": "Vivienne Sabo",
+                "status": 202
+            }
+        ],
+        "locale": "en",
+        "internal_signature": "",
+        "customer_id": "test",
+        "delivery_service": "meest",
+        "shardkey": "9",
+        "sm_id": 99,
+        "date_created": "2021-11-26T06:22:19Z",
+        "oof_shard": "1"
+    }, null, 2);
+
+    $('#orderId').value = 'b563feb7b2b84b6test';
+
+    $('#createBtn').addEventListener('click', async () => {
+        $('#createStatus').textContent = '';
+        try {
+            const body = $('#json').value;
+            const res = await fetch('/order', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body
+            });
+            const text = await res.text();
+            $('#createStatus').textContent = res.ok ? 'Создано: ' + text : 'Ошибка: ' + res.status + ' ' + text;
+        } catch (e) {
+            $('#createStatus').textContent = 'Ошибка запроса';
+        }
+    });
+
+    $('#getBtn').addEventListener('click', async () => {
+        $('#getStatus').textContent = '';
+        $('#out').textContent = '';
+        const id = $('#orderId').value.trim();
+        if (!id) { $('#getStatus').textContent = 'Введите order_uid'; return; }
+        try {
+            const res = await fetch('/order/' + encodeURIComponent(id));
+            if (!res.ok) {
+                const t = await res.text();
+                $('#getStatus').textContent = res.status === 404 ? 'Не найдено' : ('Ошибка: ' + res.status + ' ' + t);
+                return;
+            }
+            const data = await res.json();
+            $('#out').textContent = JSON.stringify(data, null, 2);
+        } catch (e) {
+            $('#getStatus').textContent = 'Ошибка запроса';
+        }
+    });
+</script>
+</body>
+</html>
